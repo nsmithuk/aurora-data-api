@@ -204,6 +204,12 @@ class AuroraDataAPICursor:
 
     def _get_database_error(self, original_error):
         # TODO: avoid SHOW ERRORS if on postgres (it's a useless network roundtrip)
+        
+        import re
+        error_code = int(re.search(r'\d+', str(original_error)).group())
+        if error_code == 1146:
+            return DatabaseError(MySQLErrorCodes(error_code), str(original_error))
+        
         try:
             err_res = self._client.execute_statement(**self._prepare_execute_args("SHOW ERRORS"))
             err_info = self._render_response(err_res)["records"][-1]
